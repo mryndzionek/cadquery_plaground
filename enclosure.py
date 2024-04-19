@@ -403,7 +403,7 @@ top = top.cut(mesh_cut.translate((0, (enclosure.innerWidth - 6) / 4, 0))).cut(
     mesh_cut.translate((0, (-enclosure.innerWidth + 6) / 4, 0))
 )
 
-# top = enclosure.flip_top(top)
+top = enclosure.flip_top(top)
 
 show_object(bottom, options={"alpha": 0.5, "color": (0, 0, 1)})
 show_object(
@@ -421,5 +421,5 @@ show_object(
 show_object(top, options={"alpha": 0.7, "color": (0, 0, 255)})
 
 cq.exporters.export(
-    bottom.union(top), os.path.join(".", "{}.stl".format("solar_manager_d"))
+    bottom.union(top), os.path.join("output", "{}.stl".format("enclosure"))
 )

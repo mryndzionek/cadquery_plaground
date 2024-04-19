@@ -181,5 +181,5 @@ for s, c in zip(split, map(lambda cs: colors.to_rgba(cs), ["blue", "green", "yel
 show_object(parts)
 
 cq.exporters.export(
-    cap_external.union(cap_internal.translate((100, 0, 0))), "stash.stl"
+    cap_external.union(cap_internal.translate((100, 0, 0))), "output/stash.stl"
 )

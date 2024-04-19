@@ -12,13 +12,6 @@ from cq_warehouse.thread import IsoThread
 from util import get_center, get_bottom, knurl, cut_in_half
 
 
-def find_closest_divisor(n, m):
-    """Find the divisor of n closest to m"""
-    divisors = np.array([i for i in range(1, int(np.sqrt(n) + 1)) if n % i == 0])
-    divisions = n / divisors
-    return divisions[np.argmin(np.abs(m - divisions))]
-
-
 class ScrewCapContainer:
     innerDiameter: float
     wallThickness: float
@@ -145,7 +138,6 @@ class ScrewCapContainer:
         )
 
         if self.knurledCap:
-            angle = 2 * math.degrees(math.asin(2 * 4 / self.innerDiameter))
             cap = knurl(
                 cap,
                 self.capHeight,
@@ -153,53 +145,13 @@ class ScrewCapContainer:
                 120,
                 self.wallThickness / 3,
                 40,
-                360 // int(find_closest_divisor(360, angle)),
+                12,
             )
 
         return container, cap
 
 
-def create_stls():
-    ds = list(range(15, 105, 5))
-    wt = [1.5 if d < 50 else 2 for d in ds]
-    hs = [15] + list(range(20, 110, 10))
-    chs = [h / 3 if h < 50 else 10 for h in hs]
-    n = len(ds) * len(hs)
-    i = 1
-
-    all = []
-    pos = []
-
-    for x, (d, t) in enumerate(zip(ds, wt)):
-        for y, (h, ch) in enumerate(zip(hs, chs)):
-            fn = "container_{}x{}_{}.stl".format(d, h, t)
-            out_path = os.path.join("stl", fn)
-            if not os.path.exists(out_path):
-                config = ScrewCapContainer(
-                    innerDiameter=d,
-                    innerHeight=h,
-                    wallThickness=t,
-                    capHeight=ch,
-                    dent=0.0,
-                    knurledCap=True,
-                )
-                print("({}/{}) Making container: '{}' ({})".format(i, n, fn, ch))
-                container, cap = config.make()
-
-                all.append((container, cap))
-                pos.append((x, y, config.innerDiameter, config.capOffset))
-
-                i += 1
-
-                stl = container.union(cap.translate((config.innerDiameter + 20, 0, 0)))
-                cq.exporters.export(stl, os.path.join("stl", fn))
-            else:
-                print("{} already exists".format(out_path))
-
-    return all, pos
-
-
-config = ScrewCapContainer(wallThickness=1.5, knurledCap=False)
+config = ScrewCapContainer(wallThickness=1.5, knurledCap=True)
 container, cap = config.make()
 
 offset_base = config.innerDiameter + 20
@@ -213,22 +165,8 @@ parts = [
     cap.translate((2 * offset_base, 0, 0)),
 ]
 
-show_object(split)
+for s, c in zip(split, ["blue", "green"]):
+    show_object(s, options={"alpha": 0.5, "color": c})
 show_object(parts)
 
-cq.exporters.export(container.union(cap.translate((100, 0, 0))), "container.stl")
-
-# all, pos = create_stls()
-# for (container, cap), (x, y, innerDiameter, capOffset) in zip(all, pos):
-#     base = (innerDiameter * 4 * x, 2 * innerDiameter * y, 0)
-#     split = [
-#         cut_in_half(container).translate(base),
-#         cut_in_half(cap.translate((0, 0, capOffset))).translate(base),
-#     ]
-#     parts = [
-#         container.translate((2 * innerDiameter + base[0], base[1], 0)),
-#         cap.translate((4 * innerDiameter + base[0], base[1], 0)),
-#     ]
-
-#     show_object(split)
-#     show_object(parts)
+cq.exporters.export(container.union(cap.translate((100, 0, 0))), "output/container.stl")
